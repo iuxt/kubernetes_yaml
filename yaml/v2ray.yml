@@ -1,0 +1,129 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: v2ray-config
+  namespace: default
+  labels:
+    run: v2ray
+data:
+  config.json: |-
+    {
+      "inbounds": [
+        {
+          "port": 2333,
+          "protocol": "vmess",
+          "settings": {
+            "clients": [
+              {
+                "id": "2ebb5198-f3ca-4105-bb91-2b72cca93abc",
+                "alterId": 0
+              }
+            ]
+          },
+          "streamSettings": {
+            "network": "ws",
+            "wsSettings": {
+            "path": "/etc/nginx/nginx.conf"
+            }
+          }
+        }
+      ],
+      "outbounds": [
+        {
+          "protocol": "freedom",
+          "settings": {}
+        }
+      ]
+    }
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: v2ray
+  namespace: default
+  labels:
+    run: v2ray
+spec:
+  selector:
+    matchLabels:
+      run: v2ray
+  template:
+    metadata:
+      labels:
+        run: v2ray
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: v2ray
+        image: iuxt/v2ray:arm64
+        args: [
+          "/v2ray/v2ray",
+          "run",
+          "-config", 
+          "/v2ray/config.json",
+        ]
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - name: config
+          mountPath: /v2ray/config.json
+          readOnly: true
+          subPath: config.json
+
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 0600
+          name: v2ray-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: v2ray
+  namespace: default
+spec:
+  ports:
+    - port: 2333
+      protocol: TCP
+      targetPort: 2333
+  selector:
+    run: v2ray
+  sessionAffinity: None
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: v2ray
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      #  nginx.ingress.kubernetes.io/configuration-snippet: |
+      #    if ($http_user_agent !~* "Go-http-client/.*") { 
+      #         return 404;
+      #     }
+
+spec:
+  tls:
+  - hosts:
+    - net.babudiu.com
+    secretName: babudiu-com
+  rules:
+  - host: net.babudiu.com
+    http:
+      paths:
+      - path: /etc/nginx/nginx.conf
+        pathType: Prefix
+        backend:
+          service:
+            name: v2ray
+            port:
+              number: 2333

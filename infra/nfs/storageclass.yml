@@ -1,0 +1,13 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-nfs-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+# 必须与deployment.yaml中的PROVISIONER_NAME一致
+provisioner: iuxt/nfs
+mountOptions:
+  - vers=4.1
+parameters:
+  archiveOnDelete: "false"
+

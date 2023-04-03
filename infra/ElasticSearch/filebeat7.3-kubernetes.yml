@@ -1,0 +1,188 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+  namespace: kube-system
+  labels:
+    k8s-app: filebeat
+data:
+  filebeat.yml: |-
+    # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          json.keys_under_root: false
+          json.overwrite_keys: false
+          json.add_error_key: true
+          host: ${NODE_NAME}
+          hints.enabled: true
+          hints.default_config:
+            type: container
+            paths:
+              - /var/log/containers/*${data.kubernetes.container.id}.log
+              exclude_files: ['ingress-nginx-controller\.*']
+
+    processors:
+      - add_cloud_metadata:
+      - add_host_metadata:
+
+    filebeat.inputs:
+    - type: log
+      symlinks: true
+      enabled: true
+      json.keys_under_root: true
+      json.overwrite_keys: true
+      json.add_error_key: true # 将解析错误的消息记录储存在error.message字段中
+      tail_files: false
+      paths:
+        - /var/log/containers/ingress-nginx-controller*.log
+      processors:
+        - decode_json_fields:
+            fields: ['log'] #要进行解析的字段
+            target: "" #json内容解析到指定的字段，如果为空（“”），则解析到顶级结构下
+            overwrite_keys: false #如果解析出的json结构中某个字段在原始的event（在filebeat中传输的一条数据为一个event）中也存在，是否覆盖event中该字段的值，默认值:false
+            process_array: false #数组是否解码，默认值:false
+            max_depth: 1
+
+      fields:
+        log_topic: "ingress-k8s"
+        type: "ingress"
+
+    cloud.id: ${ELASTIC_CLOUD_ID}
+    cloud.auth: ${ELASTIC_CLOUD_AUTH}
+
+    # output.elasticsearch:
+    #   hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
+    #   username: ${ELASTICSEARCH_USERNAME}
+    #   password: ${ELASTICSEARCH_PASSWORD}
+
+    output.kafka:
+      enabled: true
+      hosts: ["192.168.13.127:9092","192.168.13.128:9092","192.168.13.129:9092"]
+      topic: 'test'
+      partition.round_robin:
+        reachable_only: false
+      required_acks: 1
+      compression: gzip
+      max_message_bytes: 100000000000
+
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: filebeat
+  namespace: kube-system
+  labels:
+    k8s-app: filebeat
+spec:
+  template:
+    metadata:
+      labels:
+        k8s-app: filebeat
+    spec:
+      serviceAccountName: filebeat
+      terminationGracePeriodSeconds: 30
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: filebeat
+        image: docker.elastic.co/beats/filebeat:7.3.2
+        args: [
+          "-c", "/etc/filebeat.yml",
+          "-e",
+        ]
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: elasticsearch
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
+        - name: ELASTICSEARCH_USERNAME
+          value: elastic
+        - name: ELASTICSEARCH_PASSWORD
+          value: changeme
+        - name: ELASTIC_CLOUD_ID
+          value:
+        - name: ELASTIC_CLOUD_AUTH
+          value:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          runAsUser: 0
+          # If using Red Hat OpenShift uncomment this:
+          #privileged: true
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/filebeat.yml
+          readOnly: true
+          subPath: filebeat.yml
+        - name: data
+          mountPath: /usr/share/filebeat/data
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 0600
+          name: filebeat-config
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: varlog
+        hostPath:
+          path: /var/log
+      # data folder stores a registry of read status for all files, so we don't send everything again on a Filebeat pod restart
+      - name: data
+        hostPath:
+          path: /var/lib/filebeat-data
+          type: DirectoryOrCreate
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: filebeat
+subjects:
+- kind: ServiceAccount
+  name: filebeat
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: filebeat
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: filebeat
+  labels:
+    k8s-app: filebeat
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources:
+  - namespaces
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: filebeat
+  namespace: kube-system
+  labels:
+    k8s-app: filebeat
+---

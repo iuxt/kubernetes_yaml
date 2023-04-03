@@ -1,0 +1,82 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      volumes:
+        - name: host-time
+          hostPath:
+            path: /etc/localtime
+            type: ''
+      containers:
+        - name: mysql
+          # arm64 设置为mysql:oracle, amd64设置为mysql:latest
+          image: mysql:oracle
+          ports:
+            - name: tcp-3306
+              containerPort: 3306
+              protocol: TCP
+            - name: tcp-33060
+              containerPort: 33060
+              protocol: TCP
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: com.012
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+          volumeMounts:
+            - name: host-time
+              mountPath: /etc/localtime
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+  volumeClaimTemplates:
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: mysql-data
+        namespace: default
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: 
+        volumeMode: Filesystem
+  serviceName: mysql
+  revisionHistoryLimit: 10
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  ports:
+    - name: http-3306
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+  selector:
+    app: mysql
+  type: ClusterIP

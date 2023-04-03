@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash-deployment
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash-oss:7.7.1
+        ports:
+        - containerPort: 5044
+        volumeMounts:
+          - name: config-volume
+            mountPath: /usr/share/logstash/config
+          - name: logstash-pipeline-volume
+            mountPath: /usr/share/logstash/pipeline
+        resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests: 
+              memory: "1Gi"
+              cpu: "800m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: logstash-configmap
+          items:
+            - key: logstash.yml
+              path: logstash.yml
+      - name: logstash-pipeline-volume
+        configMap:
+          name: logstash-configmap
+          items:
+            - key: logstash.conf
+              path: logstash.conf
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: logstash-service
+  namespace: kube-system
+spec:
+  selector:
+    app: logstash
+  ports:
+  - protocol: TCP
+    port: 5044
+    targetPort: 5044
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-configmap
+  namespace: kube-system
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    path.config: /usr/share/logstash/pipeline
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    filter {
+
+      if [kubernetes][labels][logstyle] == "nginx" {
+        #Nginx
+        grok {
+          match => { "message" => ["%{IPORHOST:[nginx][access][remote_ip]} - %{DATA:[nginx][access][user_name]} \[%{HTTPDATE:[nginx][access][time]}\] \"%{WORD:[nginx][access][method]} %{DATA:[nginx][access][url]} HTTP/%{NUMBER:[nginx][access][http_version]}\" %{NUMBER:[nginx][access][response_code]} %{NUMBER:[nginx][access][body_sent][bytes]}( \"%{DATA:[nginx][access][referrer]}\")?( \"%{DATA:[nginx][access][agent]}\")?",
+          "%{IPORHOST:[nginx][access][remote_ip]} - %{DATA:[nginx][access][user_name]} \\[%{HTTPDATE:[nginx][access][time]}\\] \"-\" %{NUMBER:[nginx][access][response_code]} -" ] }
+        }
+
+        # date {
+        #  match => [ "[nginx][access][time]", "dd/MMM/YYYY:H:m:s Z" ]
+        #  remove_field => "[nginx][access][time]"
+        # }
+
+        useragent {
+          source => "[nginx][access][agent]"
+          target => "[nginx][access][user_agent]"
+          remove_field => "[nginx][access][agent]"
+        }
+
+        geoip {
+          source => "[nginx][access][remote_ip]"
+          target => "[nginx][access][geoip]"
+        }
+      }
+      else if [kubernetes][pod][labels][app] == "filebeat" {
+        #filebeat
+        grok {
+          match => [ "message", "(?<timestamp>%{TIMESTAMP_ISO8601})\s+%{LOGLEVEL:level}\s+%{DATA}\s+%{GREEDYDATA:logmessage}" ]
+        }
+      }
+      else {
+        #HTD java
+        grok {
+          match => [ "message", "(?<timestamp>%{TIMESTAMP_ISO8601}) - \[(?<thread>[A-Za-z0-9-]+)\] %{LOGLEVEL:level}\s+(?<class>[A-Za-z0-9.]*\.[A-Za-z0-9#_]+)\s* - %{GREEDYDATA:logmessage}" ]
+        }
+      }
+
+    }
+    output {
+      elasticsearch {
+        ilm_enabled => false
+        hosts => ["https://notforeveryone-eyes.es.amazonaws.com:443"]
+        user => 'logstash'
+        password => '${LOGSTASH_PW}'
+        index => "logstash-beta-%{+YYYY.MM.dd}"
+      }
+    }

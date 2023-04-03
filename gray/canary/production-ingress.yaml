@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: production
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  tls:
+  - hosts:
+    - test.i.com
+    secretName: i-com
+  rules:
+  - host: test.i.com
+    http:
+      paths:
+      - backend:
+          serviceName: production
+          servicePort: 80

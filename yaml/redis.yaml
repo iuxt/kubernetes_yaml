@@ -1,0 +1,114 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: default
+  name: redis-config
+data:
+  redis.conf: |-
+    dir /data
+    port 6379
+    bind 0.0.0.0
+    appendonly yes
+    requirepass "111111"
+    protected-mode no
+    pidfile /data/redis-6379.pid
+    maxmemory 2073741824
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: redis
+spec:
+  replicas: 1
+  serviceName: "redis"
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      initContainers:
+        - name: system-init
+          image: busybox:1.32
+          imagePullPolicy: IfNotPresent
+          command:
+            - "sh"
+            - "-c"
+            - "echo 2000 > /proc/sys/net/core/somaxconn && echo never > /sys/kernel/mm/transparent_hugepage/enabled"
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+      containers:
+      - name: redis
+        image: redis:5.0.8
+        command:
+          - "sh"
+          - "-c"
+          - "redis-server /usr/local/etc/redis/redis.conf"
+        ports:
+        - containerPort: 6379
+        resources:
+          limits:
+            cpu: 1
+            memory: 2000Mi
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 300
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: config
+          mountPath:  /usr/local/etc/redis/redis.conf
+          subPath: redis.conf
+      volumes:
+      - name: config
+        configMap:
+          name: redis-config
+      - name: sys
+        hostPath:
+          path: /sys
+
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 3Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: default
+spec:
+  ports:
+    - name: redis
+      port: 6379
+      protocol: TCP
+      targetPort: 6379
+  selector:
+    app: redis

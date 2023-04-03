@@ -1,0 +1,69 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: default
+  annotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: "9121"
+    prometheus.io/scrape: "true"
+spec:
+  selector:
+    app: redis-exporter
+  ports:
+  - port: 9121
+    targetPort: 9121
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+        - image: iuxt/redis_exporter:1.37.0
+          imagePullPolicy: IfNotPresent
+          name: redis-exporter
+          env:
+          - name: REDIS_ADDR
+            value: "redis:6379"
+          - name: REDIS_PASSWORD
+            value: "111111"
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9121
+              scheme: HTTP
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9121
+              scheme: HTTP
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: "1"
+              memory: "200Mi"
+            requests:
+              cpu: "1"
+              memory: "200Mi"

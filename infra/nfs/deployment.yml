@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: default
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: quay.io/vbouchaud/nfs-client-provisioner:latest
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              # 必须与class.yaml中的provisioner的名称一致
+              value: iuxt/nfs
+            - name: NFS_SERVER
+              # NFS服务器的ip地址
+              value: zhangfei
+            - name: NFS_PATH
+              # 修改为实际创建的共享挂载目录
+              value: /nfs
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            # NFS服务器的ip地址
+            server: zhangfei
+            # 修改为实际创建的共享挂载目录
+            path: /nfs
+

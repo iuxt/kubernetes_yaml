@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  tls.crt: # 这段是base64编码
+  tls.key: # 这段是base64编码
+kind: Secret
+metadata:
+  name: test.babudiu.com
+  namespace: default
+type: kubernetes.io/tls
