@@ -21,7 +21,8 @@ spec:
       serviceAccountName: nfs-client-provisioner
       containers:
         - name: nfs-client-provisioner
-          image: quay.io/vbouchaud/nfs-client-provisioner:latest
+          # image: quay.io/vbouchaud/nfs-client-provisioner:latest
+          image: registry.cn-hangzhou.aliyuncs.com/iuxt/nfs-client-provisioner:v3.2.2
           volumeMounts:
             - name: nfs-client-root
               mountPath: /persistentvolumes
