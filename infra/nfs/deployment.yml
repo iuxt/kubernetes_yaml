@@ -31,7 +31,7 @@ spec:
               value: iuxt/nfs
             - name: NFS_SERVER
               # NFS服务器的ip地址
-              value: zhangfei
+              value: 10.0.0.3
             - name: NFS_PATH
               # 修改为实际创建的共享挂载目录
               value: /nfs
@@ -39,7 +39,7 @@ spec:
         - name: nfs-client-root
           nfs:
             # NFS服务器的ip地址
-            server: zhangfei
+            server: 10.0.0.3
             # 修改为实际创建的共享挂载目录
             path: /nfs
 
