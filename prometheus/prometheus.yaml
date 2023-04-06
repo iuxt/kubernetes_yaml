@@ -127,10 +127,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - prometheus.babudiu.com
-    secretName: babudiu-com
+    - prometheus.i.com
+    secretName: i-com
   rules:
-  - host: prometheus.babudiu.com
+  - host: prometheus.i.com
     http:
       paths:
       - path: /
