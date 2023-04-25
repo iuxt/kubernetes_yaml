@@ -98,10 +98,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - grafana.babudiu.com
-    secretName: babudiu-com
+    - grafana.i.com
+    secretName: i-com
   rules:
-  - host: grafana.babudiu.com
+  - host: grafana.i.com
     http:
       paths:
       - path: /

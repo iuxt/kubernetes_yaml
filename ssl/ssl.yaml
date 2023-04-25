@@ -4,6 +4,6 @@ data:
   tls.key: # 这段是base64编码
 kind: Secret
 metadata:
-  name: test.babudiu.com
+  name: test.i.com
   namespace: default
 type: kubernetes.io/tls

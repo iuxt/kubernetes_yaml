@@ -48,10 +48,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - test.babudiu.com
-    secretName: test.babudiu.com
+    - test.i.com
+    secretName: test.i.com
   rules:
-  - host: test.babudiu.com
+  - host: test.i.com
     http:
       paths:
       - path: /

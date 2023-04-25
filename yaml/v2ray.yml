@@ -114,10 +114,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - net.babudiu.com
-    secretName: babudiu-com
+    - net.i.com
+    secretName: i-com
   rules:
-  - host: net.babudiu.com
+  - host: net.i.com
     http:
       paths:
       - path: /etc/nginx/nginx.conf
