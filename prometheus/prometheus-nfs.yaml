@@ -91,6 +91,7 @@ spec:
         configMap:
           name: prometheus-config
 
+  # StatefulSet 才可用 volumeClaimTemplates
   volumeClaimTemplates:
   - metadata:
       name: data

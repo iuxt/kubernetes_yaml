@@ -1,3 +1,4 @@
+# storage class 的作用是自动创建PV, 可以通过pvc来申请
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -7,6 +8,11 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
 # 必须与deployment.yaml中的PROVISIONER_NAME一致
 provisioner: iuxt/nfs
+
+# 默认创建的pv回收策略 可选:
+# Retain: 删除pv后, 原始文件不删除(就是nfs共享目录)
+# Delete: 删除pv后, 所有文件也删除掉.
+reclaimPolicy: Delete
 mountOptions:
   - vers=4.1
 parameters:
