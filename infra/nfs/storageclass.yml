@@ -10,8 +10,7 @@ metadata:
 provisioner: iuxt/nfs
 
 # 默认创建的pv回收策略 可选:
-# Retain: 删除pv后, 原始文件不删除(就是nfs共享目录)
-# Delete: 删除pv后, 所有文件也删除掉.
+# Retain: 如果用户删除 PersistentVolumeClaim，对应的 PersistentVolume 不会被删除。
 reclaimPolicy: Delete
 mountOptions:
   - vers=4.1
