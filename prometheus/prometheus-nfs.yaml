@@ -1,10 +1,3 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-   name: monitor
-   labels:
-     name: monitor
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -307,7 +300,7 @@ data:
           target_label: app
 
 
-      - job_name: 'ingresses_http_get'
+      - job_name: 'ingress_http_get'
 
         # ingresses that have "kubernetes.io/probed = true" annotation
         # ingresses that have "kubernetes.io/path = "/actuator/info" annotation
@@ -345,3 +338,16 @@ data:
           target_label: kubernetes_name
         - source_labels: [__meta_kubernetes_ingress_name]
           target_label: app
+
+
+      - job_name: 'kubernetes-node'
+        kubernetes_sd_configs:
+        - role: node
+        relabel_configs:
+        - source_labels: [__address__]
+          regex: '(.*):10250'
+          replacement: '${1}:9100'
+          target_label: __address__
+          action: replace
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
