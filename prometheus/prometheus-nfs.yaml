@@ -340,6 +340,7 @@ data:
           target_label: app
 
 
+      # 自动发现集群的节点
       - job_name: 'kubernetes-node'
         kubernetes_sd_configs:
         - role: node
