@@ -80,11 +80,11 @@ spec:
           name: config-volume
         resources:
           requests:
-            cpu: "100m"
-            memory: "512Mi"
+            cpu: "1"
+            memory: "2Gi"
           limits:
-            cpu: "100m"
-            memory: "512Mi"
+            cpu: "1"
+            memory: "2Gi"
       volumes:
       - name: data
         emptyDir: {}
