@@ -4,6 +4,9 @@ metadata:
   name: prometheus-config
   namespace: monitor
 data:
+  web.yml: |
+    basic_auth_users:
+      admin: $2y$05$UKSS18ztdsUNoEuXYScr2OE1TCMe1hWnmD6JuwUi/uPTJayHIakae
   prometheus.yml: |
     global:
       scrape_interval:     15s

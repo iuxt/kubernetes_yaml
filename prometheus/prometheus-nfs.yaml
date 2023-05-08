@@ -68,6 +68,7 @@ spec:
         - "/bin/prometheus"
         args:
         - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--web.config.file=/etc/prometheus/web.yml"
         - "--storage.tsdb.path=/prometheus"
         - "--storage.tsdb.retention=24h"
         - "--web.enable-lifecycle"
@@ -75,10 +76,10 @@ spec:
         - containerPort: 9090
           protocol: TCP
         volumeMounts:
-        - mountPath: "/prometheus"
-          name: data
-        - mountPath: "/etc/prometheus"
-          name: config-volume
+        - name: data
+          mountPath: "/prometheus"
+        - name: prometheus-config
+          mountPath: /etc/prometheus
         resources:
           requests:
             cpu: "1"
@@ -87,9 +88,16 @@ spec:
             cpu: "1"
             memory: "2Gi"
       volumes:
-      - name: config-volume
+      # 同一个configmap里面的多个key， 挂载到同一个目录下的不同文件
+      - name: prometheus-config
         configMap:
           name: prometheus-config
+          items:
+            - key: prometheus.yml
+              path: prometheus.yml
+            - key: web.yml
+              path: web.yml
+
 
   # StatefulSet 才可用 volumeClaimTemplates
   volumeClaimTemplates:
