@@ -92,6 +92,7 @@ spec:
       - name: prometheus-config
         configMap:
           name: prometheus-config
+          # 下面的item可以省略，省略就是挂载所有configmap里面的key
           items:
             - key: prometheus.yml
               path: prometheus.yml
