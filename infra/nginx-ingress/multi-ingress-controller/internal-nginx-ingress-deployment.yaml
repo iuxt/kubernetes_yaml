@@ -374,14 +374,14 @@ spec:
   ports:
   - appProtocol: http
     name: http
-    nodePort: 30080
+    nodePort: 30081
     port: 80
     protocol: TCP
     targetPort: http
   - appProtocol: https
     name: https
     port: 443
-    nodePort: 30443
+    nodePort: 30444
     protocol: TCP
     targetPort: https
   selector:
@@ -655,7 +655,7 @@ metadata:
     helm.sh/chart: ingress-nginx-4.0.18
   name: internal-nginx
 spec:
-  controller: k8s.io/ingress-nginx
+  controller: k8s.io/internal-ingress-nginx
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
