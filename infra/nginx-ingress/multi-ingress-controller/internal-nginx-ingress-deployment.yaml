@@ -103,7 +103,7 @@ rules:
 - apiGroups:
   - ""
   resourceNames:
-  - ingress-controller-leader
+  - internal-ingress-controller-leader
   resources:
   - configmaps
   verbs:
