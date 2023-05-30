@@ -374,14 +374,14 @@ spec:
   ports:
   - appProtocol: http
     name: http
-    nodePort: 30080
+    nodePort: 30081
     port: 80
     protocol: TCP
     targetPort: http
   - appProtocol: https
     name: https
     port: 443
-    nodePort: 30443
+    nodePort: 30444
     protocol: TCP
     targetPort: https
   selector:
