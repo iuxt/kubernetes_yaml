@@ -103,7 +103,7 @@ rules:
 - apiGroups:
   - ""
   resourceNames:
-  - internal-ingress-controller-leader
+  - ingress-controller-leader
   resources:
   - configmaps
   verbs:
@@ -447,9 +447,9 @@ spec:
       containers:
       - args:
         - /nginx-ingress-controller
-        - --election-id=internal-ingress-controller-leader
+        - --election-id=ingress-controller-leader
         - --controller-class=k8s.io/internal-ingress-nginx
-        - --ingress-class=internal-nginx
+        - --ingress-class=k8s.io/internal-nginx
         - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
         - --validating-webhook=:8443
         - --validating-webhook-certificate=/usr/local/certificates/cert
@@ -655,7 +655,7 @@ metadata:
     helm.sh/chart: ingress-nginx-4.0.18
   name: internal-nginx
 spec:
-  controller: k8s.io/internal-nginx
+  controller: k8s.io/internal-ingress-nginx
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
