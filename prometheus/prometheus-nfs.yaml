@@ -138,7 +138,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 spec:
-  ingressClassName: internet-nginx
+  ingressClassName: intranet
   tls:
   - hosts:
     - prometheus.i.com
