@@ -134,10 +134,11 @@ metadata:
   name: prometheus
   namespace: monitor
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # kubernetes.io/ingress.class: "internet-nginx"   注解马上废弃
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 spec:
+  ingressClassName: internet-nginx
   tls:
   - hosts:
     - prometheus.i.com
