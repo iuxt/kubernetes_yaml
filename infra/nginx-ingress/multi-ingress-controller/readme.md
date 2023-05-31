@@ -1,21 +1,18 @@
-执行这些命令可以创建多个ingress controller
+## 创建两个ingressclass
 
 ```bash
-sed 's#{namespace}#dev#g'  template.yaml |kubectl apply -f -
-sed 's#{namespace}#test#g'  template.yaml |kubectl apply -f -
-sed 's#{namespace}#prod#g'  template.yaml |kubectl apply -f -
+kubectl apply -f ./clusterrole.yaml
+kubectl apply -f ./intranet.yaml
+kubectl apply -f ./internet.yaml
 ```
 
-internet.yaml intranet.yaml 可以直接使用
-
-
-查看安装的ingressclass
+## 查看安装的ingressclass
 
 ```bash
 kubectl get ingressclass
 ```
 
-指定 ingress class
+## 指定 ingress class
 
 ```yml
 ---
@@ -44,4 +41,12 @@ spec:
             name: prometheus
             port:
               number: 9090
+```
+
+## 使用模板创建多个ingress controller
+
+```bash
+sed 's#{namespace}#dev#g'  template.yaml |kubectl apply -f -
+sed 's#{namespace}#test#g'  template.yaml |kubectl apply -f -
+sed 's#{namespace}#prod#g'  template.yaml |kubectl apply -f -
 ```
