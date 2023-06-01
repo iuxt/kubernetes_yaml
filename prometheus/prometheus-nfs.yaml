@@ -89,7 +89,10 @@ spec:
         # 这种方式挂载，会将原始目录整个挂载，也就是看不到原始的文件了。
         # - name: prometheus-config
         #   mountPath: /etc/prometheus
-        - name: prometheus-config
+        - name: prometheus-config                # volumes的名字
+          mountPath: /etc/prometheus/prometheus.yml     # 容器内的目录
+          subPath: prometheus.yml                       # 指定configmap里面的key
+        - name: prometheus-config                # volumes的名字
           mountPath: /etc/prometheus/web.yml     # 容器内的目录
           subPath: web.yml                       # 指定configmap里面的key
       volumes:
