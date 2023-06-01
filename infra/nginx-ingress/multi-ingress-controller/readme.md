@@ -22,10 +22,11 @@ metadata:
   name: prometheus
   namespace: monitor
   annotations:
-    kubernetes.io/ingress.class: "intranet"       # 这里指定ingress class
+    # kubernetes.io/ingress.class: "intranet"       # 这里指定ingress class  快要被废弃了
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
 spec:
+  ingressClassName: intranet
   tls:
   - hosts:
     - prometheus.i.com
