@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: busybox
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        command:
+        - "sleep"
+        args:
+        - "infinity"
+
+        volumeMounts:
+        - name: data
+          mountPath: "/data"
+
+  # StatefulSet 才可用 volumeClaimTemplates, 如果replicas是3, 那么就会创建3个pvc 对应3个pv, 数据是不互通的. 删除statefulset后, pvc不会被自动删除, pv也不会被自动删除, 新版k8s可以配置是否删除
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "managed-nfs-storage"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
