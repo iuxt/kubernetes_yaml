@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: busybox-configmap
+data:
+  1.sh: |
+    1
+  2.conf: |
+    2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: busybox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox
+        name: busybox
+        command:
+        - "sleep"
+        args:
+        - "infinity"
+
+        volumeMounts:
+        # 这种方式挂载，会将原始目录整个挂载，也就是看不到原始的文件了。
+        # - name: prometheus-config
+        #   mountPath: /etc/prometheus
+        - name: busybox-volume                        # volumes的名字
+          mountPath: /etc/start.sh                    # 容器内的目录或文件(正确挂载configmap时为文件)
+          subPath: start_script                       # 指定configmap里面的key或者和下面的path保持一致
+        - name: busybox-volume
+          mountPath: /etc/config.conf
+          subPath: config_file
+      volumes:
+      # 同一个configmap里面的多个key， 挂载到同一个目录下的不同文件
+      - name: busybox-volume
+        configMap:
+          name: busybox-configmap
+          # 下面的item可以省略，省略就是挂载所有configmap里面的key
+          items:
+            - key: 1.sh
+              path: start_script                      # 和上面的subpath保持一致
+            - key: 2.conf
+              path: config_file
