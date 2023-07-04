@@ -90,11 +90,11 @@ spec:
         # - name: prometheus-config
         #   mountPath: /etc/prometheus
         - name: prometheus-config                # volumes的名字
-          mountPath: /etc/prometheus/prometheus.yml     # 容器内的目录
-          subPath: prometheus.yml                       # 指定configmap里面的key
+          mountPath: /etc/prometheus/prometheus.yml     # 容器内的目录或文件(正确挂载configmap时为文件)
+          subPath: prometheus_config                       # 指定configmap里面的key
         - name: prometheus-config                # volumes的名字
-          mountPath: /etc/prometheus/web.yml     # 容器内的目录
-          subPath: web.yml                       # 指定configmap里面的key
+          mountPath: /etc/prometheus/web.yml     # 容器内的目录或文件(正确挂载configmap时为文件)
+          subPath: web_auth_config                       # 指定configmap里面的key
       volumes:
       # 同一个configmap里面的多个key， 挂载到同一个目录下的不同文件
       - name: prometheus-config
@@ -102,10 +102,10 @@ spec:
           name: prometheus-config
           # 下面的item可以省略，省略就是挂载所有configmap里面的key
           items:
-            - key: prometheus.yml
-              path: prometheus.yml
+            - key: prometheus.yml               # key就是configmap里面的文件名
+              path: prometheus_config
             - key: web.yml
-              path: web.yml
+              path: web_auth_config
 
 
   # StatefulSet 才可用 volumeClaimTemplates
