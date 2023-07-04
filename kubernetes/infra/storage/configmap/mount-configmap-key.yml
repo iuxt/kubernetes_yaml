@@ -31,12 +31,9 @@ spec:
         - "infinity"
 
         volumeMounts:
-        # 这种方式挂载，会将原始目录整个挂载，也就是看不到原始的文件了。
-        # - name: prometheus-config
-        #   mountPath: /etc/prometheus
         - name: busybox-volume                        # volumes的名字
           mountPath: /etc/start.sh                    # 容器内的目录或文件(正确挂载configmap时为文件)
-          subPath: start_script                       # 指定configmap里面的key或者和下面的path保持一致
+          subPath: start_script                       # 和下面的configMap.items.path保持一致
         - name: busybox-volume
           mountPath: /etc/config.conf
           subPath: config_file
