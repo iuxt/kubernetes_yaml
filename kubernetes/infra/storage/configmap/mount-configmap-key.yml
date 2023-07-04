@@ -47,7 +47,7 @@ spec:
           name: busybox-configmap
           # 下面的item可以省略，省略就是挂载所有configmap里面的key
           items:
-            - key: 1.sh
+            - key: 1.sh                               # 和configmap里面的文件名对应
               path: start_script                      # 和上面的subpath保持一致
             - key: 2.conf
               path: config_file
