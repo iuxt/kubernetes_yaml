@@ -99,7 +99,10 @@ data:
           replacement: $1:$2
         - action: labelmap
           regex: __meta_kubernetes_service_label_(.+)
-        
+
+        - target_label: __address__
+          replacement: blackbox-exporter.monitor.svc:9115
+          
         # 新增标签
         - source_labels: [__meta_kubernetes_namespace]
           action: replace
