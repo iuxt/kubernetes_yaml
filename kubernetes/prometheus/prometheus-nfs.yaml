@@ -68,7 +68,8 @@ spec:
         - "/bin/prometheus"
         args:
         - "--config.file=/etc/prometheus/prometheus.yml"
-        - "--web.config.file=/etc/prometheus/web.yml"
+        # 是否开启 Basic Auth 认证
+        # - "--web.config.file=/etc/prometheus/web.yml"
         - "--storage.tsdb.path=/prometheus"
         - "--storage.tsdb.retention=24h"
         - "--web.enable-lifecycle"
@@ -89,12 +90,12 @@ spec:
         # 这种方式挂载，会将原始目录整个挂载，也就是看不到原始的文件了。
         # - name: prometheus-config
         #   mountPath: /etc/prometheus
-        - name: prometheus-config                # volumes的名字
+        - name: prometheus-config                       # volumes的名字
           mountPath: /etc/prometheus/prometheus.yml     # 容器内的目录或文件(正确挂载configmap时为文件)
-          subPath: prometheus_config                       # 指定configmap里面的key
-        - name: prometheus-config                # volumes的名字
-          mountPath: /etc/prometheus/web.yml     # 容器内的目录或文件(正确挂载configmap时为文件)
-          subPath: web_auth_config                       # 指定configmap里面的key
+          subPath: prometheus_config                    # 指定configmap里面的path
+        - name: prometheus-config
+          mountPath: /etc/prometheus/web.yml
+          subPath: web_auth_config
       volumes:
       # 同一个configmap里面的多个key， 挂载到同一个目录下的不同文件
       - name: prometheus-config
@@ -143,10 +144,10 @@ metadata:
   namespace: monitor
   annotations:
     # kubernetes.io/ingress.class: "internet-nginx"   注解马上废弃
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
 spec:
-  ingressClassName: intranet
+  ingressClassName: internet
   tls:
   - hosts:
     - prometheus.i.com
