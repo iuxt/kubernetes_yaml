@@ -48,7 +48,7 @@ spec:
   tls:
   - hosts:
     - test.i.com
-    secretName: test.i.com
+    secretName: i-com
   rules:
   - host: test.i.com
     http:
