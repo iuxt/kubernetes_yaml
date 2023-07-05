@@ -99,6 +99,8 @@ data:
           replacement: $1:$2
         - action: labelmap
           regex: __meta_kubernetes_service_label_(.+)
+        
+        # 新增标签
         - source_labels: [__meta_kubernetes_namespace]
           action: replace
           target_label: kubernetes_namespace
@@ -112,8 +114,9 @@ data:
           action: replace
           target_label: pod_name
 
-      - job_name: 'http_get'
-        # service 需要添加元数据
+      - job_name: 'service_http_get'
+
+        # service 需要添加注解
         # prometheus.io/path: /actuator/info
         # prometheus.io/http_get: "true"
 
@@ -159,8 +162,9 @@ data:
 
       - job_name: 'ingress_http_get'
 
-        # ingresses that have "kubernetes.io/probed = true" annotation
-        # ingresses that have "kubernetes.io/path = "/actuator/info" annotation
+        # ingress 需要添加注解才可被自动发现
+        # kubernetes.io/probed: "true"
+        # kubernetes.io/path: "/"
 
         metrics_path: /probe
         params:
@@ -179,7 +183,7 @@ data:
           replacement: ${1}://${2}${3}
 
         - target_label: __address__
-          replacement: 10.200.4.63:9115
+          replacement: blackbox-exporter.monitor.svc:9115
 
         - source_labels: [__param_target]
           target_label: instance
